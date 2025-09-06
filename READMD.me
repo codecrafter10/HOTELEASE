@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HotelEase — Hotel Management</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">HE</div>
+        <div class="brand-text">
+          <div class="hotel-name">HotelEase</div>
+          <div class="hotel-sub">Management Dashboard</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-btn active" data-view="dashboard">🏠 Dashboard</button>
+        <button class="nav-btn" data-view="bookings">📚 Bookings</button>
+        <button class="nav-btn" data-view="rooms">🛏 Rooms</button>
+        <button class="nav-btn" data-view="guests">🧾 Guests</button>
+        <button class="nav-btn" data-view="reports">📈 Reports</button>
+        <button class="nav-btn" data-view="settings">⚙️ Settings</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="tip">Tip: Add sample bookings with <strong>+ New</strong>.</div>
+        <div class="copyright">All Rights Reserved © Zaid Ali</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="searchbox">
+          <input id="globalSearch" placeholder="Search guest, room, booking..." />
+        </div>
+        <div class="top-actions">
+          <div class="user">ZA</div>
+        </div>
+      </header>
+
+      <!-- VIEWS -->
+      <section id="dashboard" class="view">
+        <div class="dashboard-grid">
+          <div class="card stat">
+            <div class="stat-title">Occupancy</div>
+            <div class="stat-value" id="occupancy">--%</div>
+            <div class="stat-sub" id="roomsSummary">-- / -- rooms</div>
+          </div>
+
+          <div class="card stat">
+            <div class="stat-title">Today Check-ins</div>
+            <div class="stat-value" id="todayCheckins">--</div>
+            <div class="stat-sub">Expected arrivals</div>
+          </div>
+
+          <div class="card stat">
+            <div class="stat-title">Revenue (30d)</div>
+            <div class="stat-value" id="revenue30">₹--</div>
+            <div class="stat-sub">Estimated</div>
+          </div>
+
+          <div class="card quick-actions">
+            <div class="qa-head">Quick Actions</div>
+            <div class="qa-body">
+              <button class="btn primary" id="newBookingBtn">+ New Booking</button>
+              <button class="btn" id="newRoomBtn">+ New Room</button>
+            </div>
+          </div>
+
+          <div class="card recent-bookings" style="grid-column: 1 / -1;">
+            <div class="card-head">
+              <h3>Recent Bookings</h3>
+              <div class="card-actions">
+                <button class="btn" id="refreshBtn">Refresh</button>
+                <button class="btn" id="exportBtn">Export JSON</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table id="bookingsMini">
+                <thead><tr><th>Guest</th><th>Room</th><th>Dates</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card rooms-overview" style="grid-column: 1 / -1;">
+            <h3>Rooms</h3>
+            <div class="rooms-grid" id="roomsList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="bookings" class="view" style="display:none">
+        <div class="card">
+          <div class="card-head">
+            <h3>Bookings</h3>
+            <div>
+              <button class="btn primary" id="newBookingBtn2">+ New</button>
+              <button class="btn" id="exportBookingsBtn">Download</button>
+            </div>
+          </div>
+          <div class="table-wrap large">
+            <table id="bookingsTable">
+              <thead><tr><th>ID</th><th>Guest</th><th>Room</th><th>From</th><th>To</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="rooms" class="view" style="display:none">
+        <div class="card">
+          <div class="card-head">
+            <h3>Rooms Catalog</h3>
+            <div>
+              <input id="roomFilter" placeholder="Filter type / status" />
+              <button class="btn primary" id="addRoomBtn">+ Add Room</button>
+            </div>
+          </div>
+          <div class="rooms-grid-full" id="roomsGrid"></div>
+        </div>
+      </section>
+
+      <section id="guests" class="view" style="display:none">
+        <div class="card">
+          <h3>Guests</h3>
+          <div class="table-wrap">
+            <table id="guestsTable"><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Notes</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+      </section>
+
+      <section id="reports" class="view" style="display:none">
+        <div class="card">
+          <h3>Reports</h3>
+          <div class="report-row">
+            <div class="report-card"><div class="report-title">Last 30 days revenue</div><div id="reportRevenue">₹--</div></div>
+            <div class="report-card"><div class="report-title">Occupancy rate</div><div id="reportOccupancy">--%</div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="settings" class="view" style="display:none">
+        <div class="card">
+          <h3>Settings</h3>
+          <label>Hotel Name</label>
+          <input id="hotelName" />
+          <label>Currency</label>
+          <input id="currency" />
+          <div style="margin-top:12px">
+            <button class="btn primary" id="saveSettings">Save</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal root -->
+  <div id="modalRoot" class="modal-root" aria-hidden="true"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+ //////////JS
+ /* HotelEase — interactive demo (pure JS)
+   Save state to localStorage so data persists */
+const STORAGE_KEY = 'hotelsease_demo_v2';
+
+const defaultState = {
+  hotel:{name:'HotelEase Demo', currency:'₹'},
+  rooms:[
+    {id:'R101',type:'Deluxe',price:3500,status:'available',beds:2,desc:'City view'},
+    {id:'R102',type:'Suite',price:7200,status:'occupied',beds:3,desc:'Sea view'},
+    {id:'R103',type:'Standard',price:2200,status:'available',beds:1,desc:'Garden view'},
+    {id:'R104',type:'Deluxe',price:3600,status:'maintenance',beds:2,desc:'Under renovation'}
+  ],
+  guests:[
+    {id:'G1',name:'Aman Kumar',phone:'+91 98765 43210',email:'aman@example.com',notes:'High floor'},
+    {id:'G2',name:'Rhea Sharma',phone:'+91 91234 56789',email:'rhea@example.com'}
+  ],
+  bookings:[
+    {id:'B1',guestId:'G1',guestName:'Aman Kumar',roomId:'R102',from:'2025-09-02',to:'2025-09-06',amount:28800,status:'checked-in'},
+    {id:'B2',guestId:'G2',guestName:'Rhea Sharma',roomId:'R103',from:'2025-09-10',to:'2025-09-12',amount:4400,status:'booked'}
+  ]
+};
+
+let state = loadState();
+
+/* ---------- Persistence ---------- */
+function loadState(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) { localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultState)); return deepClone(defaultState); }
+  try{ return JSON.parse(raw); } catch(e){ localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultState)); return deepClone(defaultState); }
+}
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+/* ---------- Utilities ---------- */
+function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
+function el(sel){ return document.querySelector(sel); }
+function els(sel){ return Array.from(document.querySelectorAll(sel)); }
+function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"]/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function uid(prefix='ID'){ return prefix + Math.random().toString(36).slice(2,9).toUpperCase(); }
+
+/* ---------- Navigation ---------- */
+els('.nav-btn').forEach(b=> b.addEventListener('click', navClick));
+function navClick(e){
+  const btn = e.currentTarget;
+  els('.nav-btn').forEach(x=>x.classList.remove('active'));
+  btn.classList.add('active');
+  const view = btn.dataset.view;
+  els('.view').forEach(v=>v.style.display='none');
+  el('#' + view).style.display = 'block';
+  renderAll();
+}
+
+/* ---------- Wire UI actions ---------- */
+el('#newBookingBtn').addEventListener('click', ()=> openBookingModal());
+el('#newBookingBtn2').addEventListener('click', ()=> openBookingModal());
+el('#newRoomBtn').addEventListener('click', ()=> openRoomModal());
+el('#addRoomBtn').addEventListener('click', ()=> openRoomModal());
+el('#refreshBtn').addEventListener('click', ()=> { state = loadState(); renderAll(); });
+el('#exportBtn').addEventListener('click', exportJSON);
+el('#exportBookingsBtn').addEventListener('click', exportJSON);
+el('#roomFilter').addEventListener('input', renderRoomsGrid);
+el('#globalSearch').addEventListener('input', renderAll);
+el('#saveSettings').addEventListener('click', ()=>{ state.hotel.name = el('#hotelName').value||'HotelEase'; state.hotel.currency = el('#currency').value||'₹'; saveState(); alert('Saved'); renderAll(); });
+
+/* ---------- Renderers ---------- */
+function renderAll(){
+  renderDashboard();
+  renderBookingsMini();
+  renderBookingsTable();
+  renderRoomsList();
+  renderRoomsGrid();
+  renderGuests();
+  renderReports();
+  el('#hotelName').value = state.hotel.name;
+  el('#currency').value = state.hotel.currency;
+}
+
+function renderDashboard(){
+  const occupied = state.rooms.filter(r=>r.status==='occupied').length;
+  const total = state.rooms.length;
+  const occPct = total? Math.round((occupied/total)*100):0;
+  el('#occupancy').textContent = occPct + '%';
+  el('#roomsSummary').textContent = `${occupied} / ${total} rooms`;
+  const today = (new Date()).toISOString().slice(0,10);
+  const todayCheckins = state.bookings.filter(b=>b.from===today).length;
+  el('#todayCheckins').textContent = todayCheckins;
+  // revenue last 30 days
+  const now = new Date(); const th30 = new Date(now.getTime()-30*24*60*60*1000);
+  let rev=0; state.bookings.forEach(b=>{ const f=new Date(b.from); if(f>=th30 && f<=now) rev+=Number(b.amount||0); });
+  el('#revenue30').textContent = (state.hotel.currency||'₹') + rev;
+}
+
+function renderBookingsMini(){
+  const tbody = el('#bookingsMini tbody'); tbody.innerHTML='';
+  const filtered = filterBookings(state.bookings).slice(-8).reverse();
+  filtered.forEach(b=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${escapeHtml(b.guestName)}</td><td>${escapeHtml(b.roomId)}</td><td>${b.from} → ${b.to}</td><td>${state.hotel.currency||'₹'}${b.amount}</td><td><span class="pill ${statusClass(b.status)}">${b.status}</span></td><td><button class="btn" onclick="viewBooking('${b.id}')">View</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderBookingsTable(){
+  const tbody = el('#bookingsTable tbody'); tbody.innerHTML='';
+  filterBookings(state.bookings).forEach(b=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${escapeHtml(b.id)}</td><td>${escapeHtml(b.guestName)}</td><td>${escapeHtml(b.roomId)}</td><td>${b.from}</td><td>${b.to}</td><td>${state.hotel.currency||'₹'}${b.amount}</td><td>${b.status}</td><td>
+      <button class="btn" onclick="checkIn('${b.id}')">Check-in</button>
+      <button class="btn" onclick="checkOut('${b.id}')">Check-out</button>
+      <button class="btn" onclick="cancelBooking('${b.id}')">Cancel</button>
+    </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderRoomsList(){
+  const root = el('#roomsList'); root.innerHTML='';
+  state.rooms.forEach(r=>{
+    const div = document.createElement('div'); div.className='room-card';
+    div.innerHTML = `<div>
+        <div class="room-meta"><h4>${r.id} • ${r.type}</h4><div class="muted">${r.desc}</div></div>
+      </div>
+      <div style="text-align:right">
+        <div class="muted">₹${r.price}</div>
+        <div style="margin-top:8px"><span class="pill ${r.status}">${r.status}</span></div>
+        <div style="margin-top:8px"><button class="btn" onclick="editRoom('${r.id}')">Edit</button></div>
+      </div>`;
+    root.appendChild(div);
+  });
+}
+
+function renderRoomsGrid(){
+  const root = el('#roomsGrid'); root.innerHTML='';
+  const q = el('#roomFilter').value.toLowerCase();
+  state.rooms.filter(r=> r.id.toLowerCase().includes(q) || r.type.toLowerCase().includes(q) || r.status.toLowerCase().includes(q) ).forEach(r=>{
+    const d = document.createElement('div'); d.className='card room-card';
+    d.innerHTML = `<div>
+        <div style="font-weight:700">${r.id} • ${r.type}</div>
+        <div class="muted">${r.desc} • Beds: ${r.beds}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:700">₹${r.price}</div>
+        <div style="margin-top:8px"><span class="pill ${r.status}">${r.status}</span></div>
+        <div style="margin-top:8px">
+          <button class="btn" onclick="editRoom('${r.id}')">Edit</button>
+          <button class="btn" onclick="toggleRoomStatus('${r.id}')">Toggle</button>
+        </div>
+      </div>`;
+    root.appendChild(d);
+  });
+}
+
+function renderGuests(){
+  const tbody = el('#guestsTable tbody'); tbody.innerHTML='';
+  state.guests.forEach(g=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${escapeHtml(g.name)}</td><td>${escapeHtml(g.phone||'—')}</td><td>${escapeHtml(g.email||'—')}</td><td>${escapeHtml(g.notes||'')}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderReports(){
+  const now = new Date(); const th30 = new Date(now.getTime()-30*24*60*60*1000);
+  let rev=0; state.bookings.forEach(b=>{ const f=new Date(b.from); if(f>=th30&&f<=now) rev+=Number(b.amount||0); });
+  el('#reportRevenue').textContent = (state.hotel.currency||'₹') + rev;
+  const occ = state.rooms.filter(r=>r.status==='occupied').length; const pct = state.rooms.length? Math.round((occ/state.rooms.length)*100):0;
+  el('#reportOccupancy').textContent = pct + '%';
+}
+
+/* ---------- Helpers for status & filtering ---------- */
+function statusClass(s){
+  if(!s) return '';
+  if(s.includes('book')) return 'available'; // use available style for booked pill
+  if(s.includes('check')) return 'occupied';
+  if(s.includes('cancel')) return 'maintenance';
+  return '';
+}
+function filterBookings(list){
+  const q = el('#globalSearch').value.toLowerCase();
+  if(!q) return list;
+  return list.filter(b=> b.guestName.toLowerCase().includes(q) || b.roomId.toLowerCase().includes(q) || b.id.toLowerCase().includes(q));
+}
+
+/* ---------- Actions (exposed) ---------- */
+window.viewBooking = id => { const b = state.bookings.find(x=>x.id===id); if(!b) return alert('Not found'); openBookingModal(b); }
+window.editRoom = id => { const r = state.rooms.find(x=>x.id===id); if(!r) return alert('Room not found'); openRoomModal(r); }
+window.toggleRoomStatus = id => { const r = state.rooms.find(x=>x.id===id); if(!r) return; r.status = (r.status==='available'?'occupied':(r.status==='occupied'?'available':'available')); saveState(); renderAll(); }
+window.checkIn = id => { const b = state.bookings.find(x=>x.id===id); if(!b) return; b.status='checked-in'; const r = state.rooms.find(x=>x.id===b.roomId); if(r) r.status='occupied'; saveState(); renderAll(); }
+window.checkOut = id => { const b = state.bookings.find(x=>x.id===id); if(!b) return; b.status='checked-out'; const r = state.rooms.find(x=>x.id===b.roomId); if(r) r.status='available'; saveState(); renderAll(); }
+window.cancelBooking = id => { const b = state.bookings.find(x=>x.id===id); if(!b) return; b.status='cancelled'; saveState(); renderAll(); }
+
+/* ---------- Modal (booking/room) ---------- */
+function openBookingModal(data){
+  const root = el('#modalRoot'); root.innerHTML = '';
+  const backdrop = document.createElement('div'); backdrop.className='modal-back';
+  const modal = document.createElement('div'); modal.className='modal';
+  modal.innerHTML = `<h3>${data? 'Edit Booking': 'New Booking'}</h3>
+    <div class="form-grid" style="margin-top:8px">
+      <div>
+        <label>Guest Name</label>
+        <input id="m_guestName" value="${data?escapeHtml(data.guestName):''}" />
+      </div>
+      <div>
+        <label>Guest Phone</label>
+        <input id="m_guestPhone" value="${data?escapeHtml(data.guestPhone||''):''}" />
+      </div>
+      <div>
+        <label>Room</label>
+        <select id="m_room">${ state.rooms.map(r=>`<option value="${r.id}" ${data&&data.roomId===r.id?'selected':''}>${r.id} — ${r.type} (${r.status})</option>`).join('') }</select>
+      </div>
+      <div>
+        <label>Amount</label>
+        <input id="m_amount" type="number" value="${data?escapeHtml(data.amount):''}" />
+      </div>
+      <div>
+        <label>From</label>
+        <input id="m_from" type="date" value="${data?escapeHtml(data.from):''}" />
+      </div>
+      <div>
+        <label>To</label>
+        <input id="m_to" type="date" value="${data?escapeHtml(data.to):''}" />
+      </div>
+      <div style="grid-column:1/3">
+        <label>Notes</label>
+        <textarea id="m_notes">${data?escapeHtml(data.notes||''):''}</textarea>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+      <div class="muted">ID: ${data?escapeHtml(data.id):'will be generated'}</div>
+      <div>
+        <button class="btn" id="closeModal">Close</button>
+        <button class="btn primary" id="saveBookingBtn">Save Booking</button>
+      </div>
+    </div>`;
+  root.appendChild(backdrop); root.appendChild(modal); root.style.display='flex';
+  el('#closeModal').addEventListener('click', closeModal);
+  el('#saveBookingBtn').addEventListener('click', ()=> saveBooking(data?data.id:null) );
+}
+
+function openRoomModal(data){
+  const root = el('#modalRoot'); root.innerHTML = '';
+  const backdrop = document.createElement('div'); backdrop.className='modal-back';
+  const modal = document.createElement('div'); modal.className='modal';
+  modal.innerHTML = `<h3>${data? 'Edit Room' : 'Add Room'}</h3>
+    <div class="form-grid" style="margin-top:8px">
+      <div><label>Room ID</label><input id="r_id" value="${data?escapeHtml(data.id):''}" /></div>
+      <div><label>Type</label><input id="r_type" value="${data?escapeHtml(data.type):''}" /></div>
+      <div><label>Price</label><input id="r_price" type="number" value="${data?escapeHtml(data.price):''}" /></div>
+      <div><label>Status</label><select id="r_status"><option value="available" ${data&&data.status==='available'?'selected':''}>available</option><option value="occupied" ${data&&data.status==='occupied'?'selected':''}>occupied</option><option value="maintenance" ${data&&data.status==='maintenance'?'selected':''}>maintenance</option></select></div>
+      <div><label>Beds</label><input id="r_beds" type="number" value="${data?escapeHtml(data.beds):1}" /></div>
+      <div style="grid-column:1/3"><label>Description</label><textarea id="r_desc">${data?escapeHtml(data.desc||''):''}</textarea></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+      <div></div>
+      <div>
+        <button class="btn" id="closeModal2">Close</button>
+        <button class="btn primary" id="saveRoomBtn">Save Room</button>
+      </div>
+    </div>`;
+  root.appendChild(backdrop); root.appendChild(modal); root.style.display='flex';
+  el('#closeModal2').addEventListener('click', closeModal);
+  el('#saveRoomBtn').addEventListener('click', ()=> saveRoom(data?data.id:null) );
+}
+
+function closeModal(){ const root = el('#modalRoot'); root.innerHTML=''; root.style.display='none'; }
+
+/* ---------- Save booking/room ---------- */
+function saveBooking(existingId){
+  const guestName = el('#m_guestName').value.trim(); if(!guestName){ alert('Guest name required'); return; }
+  const roomId = el('#m_room').value;
+  const from = el('#m_from').value; const to = el('#m_to').value; const amount = Number(el('#m_amount').value||0);
+  if(existingId){
+    const b = state.bookings.find(x=>x.id===existingId); if(!b) return; Object.assign(b,{guestName,roomId,from,to,amount}); saveState(); closeModal(); renderAll(); return;
+  }
+  const id = uid('B'); let guest = state.guests.find(g=>g.name.toLowerCase()===guestName.toLowerCase());
+  if(!guest){ guest = {id: uid('G'), name:guestName, phone: el('#m_guestPhone')?.value || '', email:''}; state.guests.push(guest); }
+  const booking = {id, guestId: guest.id, guestName, roomId, from, to, amount, status:'booked'};
+  state.bookings.push(booking);
+  // If from is today, set room occupied
+  if(from === (new Date()).toISOString().slice(0,10)){
+    const r = state.rooms.find(x=>x.id===roomId); if(r) r.status='occupied';
+  }
+  saveState(); closeModal(); renderAll();
+}
+
+function saveRoom(existingId){
+  const id = el('#r_id').value.trim(); if(!id){ alert('Room id required'); return; }
+  const type = el('#r_type').value; const price = Number(el('#r_price').value||0); const status = el('#r_status').value; const beds = Number(el('#r_beds').value||1); const desc = el('#r_desc').value;
+  if(existingId){
+    const r = state.rooms.find(x=>x.id===existingId); if(!r) return; Object.assign(r,{id,type,price,status,beds,desc}); saveState(); closeModal(); renderAll(); return;
+  }
+  if(state.rooms.find(r=>r.id===id)){ alert('Room exists'); return; }
+  state.rooms.push({id,type,price,status,beds,desc}); saveState(); closeModal(); renderAll();
+}
+
+/* ---------- Export / helpers ---------- */
+function exportJSON(){
+  const data = JSON.stringify(state, null, 2); const blob = new Blob([data], {type:'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'hotel-data.json'; a.click(); URL.revokeObjectURL(url);
+}
+
+/* ---------- Initialize ---------- */
+renderAll();
+
+/* ---------- Simple demo helpers to add sample quickly ---------- */
+el('#newRoomBtn')?.addEventListener('click', ()=> openRoomModal());
+el('#newBookingBtn')?.addEventListener('click', ()=> openBookingModal());
+
+/* Keyboard: Esc closes modal */
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+////
+/////////css
+:root{
+  --bg-1: linear-gradient(135deg, #0f1724 0%, #071428 60%);
+  --card: rgba(255,255,255,0.04);
+  --glass: rgba(255,255,255,0.06);
+  --accent: #06b6d4;
+  --accent-2: #7c3aed;
+  --muted: #a8b3c7;
+  --success: #10b981;
+  --danger: #ef4444;
+  --surface: #061124;
+  --radius: 12px;
+}
+
+/* Basic layout */
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;color:#e6eef6;background:var(--bg-1)}
+.app{display:grid;grid-template-columns:280px 1fr;gap:20px;max-width:1200px;margin:26px auto;padding:8px;align-items:start}
+
+/* Sidebar */
+.sidebar{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));backdrop-filter:blur(6px);border-radius:16px;padding:18px;height:calc(100vh - 52px);position:sticky;top:26px;box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:14px}
+.logo{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:700;color:#021025}
+.brand-text .hotel-name{font-weight:700;font-size:16px}
+.brand-text .hotel-sub{font-size:12px;color:var(--muted)}
+.nav{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.nav-btn{background:transparent;border:none;color:var(--muted);text-align:left;padding:10px;border-radius:10px;cursor:pointer;font-size:15px;transition:all .18s}
+.nav-btn.active, .nav-btn:hover{background:var(--glass);color:var(--accent);transform:translateX(4px)}
+.sidebar-footer{position:absolute;left:18px;right:18px;bottom:18px;font-size:13px;color:var(--muted)}
+.sidebar-footer .tip{margin-bottom:8px}
+.sidebar-footer .copyright{font-size:12px;color:#93a3b8}
+
+/* Main area */
+.main{padding:8px}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px}
+.searchbox input{width:360px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;outline:none}
+.top-actions{display:flex;align-items:center;gap:12px}
+.user{width:40px;height:40px;border-radius:50%;background:linear-gradient(90deg,#efb5ff,#9be7ff);display:grid;place-items:center;color:#071428;font-weight:700}
+
+/* Cards */
+.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:var(--radius);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.02);margin-bottom:12px}
+.dashboard-grid{display:grid;grid-template-columns:repeat(3,1fr) ;gap:14px}
+.stat{padding:18px}
+.stat-title{font-size:13px;color:var(--muted);margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:700}
+.stat-sub{font-size:13px;color:var(--muted);margin-top:6px}
+.quick-actions .qa-body{display:flex;gap:8px;margin-top:8px}
+.btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;color:inherit;cursor:pointer}
+.btn.primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));border:none;color:#021025;box-shadow:0 6px 20px rgba(7,10,25,0.45)}
+.card-head{display:flex;justify-content:space-between;align-items:center}
+.table-wrap{overflow:auto;max-height:340px;margin-top:10px;background:transparent}
+.table-wrap.large{max-height:520px}
+table{width:100%;border-collapse:collapse;color:inherit}
+thead th{font-size:13px;text-align:left;padding:10px;color:var(--muted)}
+tbody td{padding:10px;border-top:1px solid rgba(255,255,255,0.02)}
+
+/* Rooms */
+.rooms-grid{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.room-card{flex:1 1 220px;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));display:flex;justify-content:space-between;align-items:center;gap:8px}
+.room-meta h4{margin:0 0 6px 0}
+.room-meta .muted{color:var(--muted);font-size:13px}
+.rooms-grid-full{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+
+/* pills */
+.pill{display:inline-block;padding:6px 8px;border-radius:999px;font-size:12px}
+.pill.available{background:rgba(16,185,129,0.1);color:var(--success)}
+.pill.occupied{background:rgba(239,68,68,0.08);color:var(--danger)}
+.pill.maintenance{background:rgba(245,158,11,0.08);color:#f59e0b}
+
+/* Reports */
+.report-row{display:flex;gap:14px;margin-top:10px}
+.report-card{flex:1;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02))}
+
+/* Modal */
+.modal-root{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;z-index:120}
+.modal-back{position:fixed;inset:0;background:linear-gradient(180deg, rgba(1,3,9,0.6), rgba(1,3,9,0.6));backdrop-filter:blur(3px)}
+.modal{position:relative;background:linear-gradient(180deg,#061124,#0b1a2b);padding:18px;border-radius:14px;max-width:760px;width:100%;z-index:130;color:inherit;box-shadow:0 12px 40px rgba(2,6,23,0.7)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;outline:none}
+textarea{min-height:70px;resize:vertical}
+
+/* small screens */
+@media (max-width:980px){
+  .app{grid-template-columns:1fr;padding:12px}
+  .dashboard-grid{grid-template-columns:repeat(2,1fr)}
+  .searchbox input{width:220px}
+}
+@media (max-width:560px){
+  .dashboard-grid{grid-template-columns:1fr}
+  .searchbox input{width:140px}
+  .nav{flex-direction:row;flex-wrap:wrap;gap:6px}
+  .sidebar{position:relative;height:auto}
+  .sidebar-footer{position:relative}
+}
